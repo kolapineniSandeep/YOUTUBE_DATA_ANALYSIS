@@ -1,6 +1,6 @@
 
 
-# # SANDEEP KOLAPINENI (C0827402)
+# # SANDEEP KOLAPINENI 
 
 
 import matplotlib.pyplot as plt
