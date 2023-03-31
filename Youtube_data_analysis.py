@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
+
 
 # # SANDEEP KOLAPINENI (C0827402)
-
-# In[23]:
 
 
 import matplotlib.pyplot as plt
@@ -17,7 +14,6 @@ from nltk.corpus import stopwords
 
 # ## Data Collection 
 
-# In[3]:
 
 
 # USING VIDEO ID and API KEY fetch video details for analysis, youtube give below details, we created them as a Dictionary and returning 
@@ -73,14 +69,8 @@ def fetch_video_details(video_id):
         return None
 
 
-# In[ ]:
-
-
-#READ video ids from given file 
-df = pd.read_csv('vdoLinks.csv')
-#Youtube only provide 10000 hits , 5000 for video 5000 hits for comments 
-#  Select the  5000 rows each time  in the video_id column
-video_ids = df['video_id'].iloc[0:25600]
+    
+video_ids = ['Tgm9Y7aj0pU','Lam9Y7aj0pU']
 
 # Apply fetch_video_details function to each id and drop null values
 df_details = video_ids.apply(fetch_video_details).dropna()
@@ -95,7 +85,6 @@ df_details = pd.DataFrame(df_details.tolist(), columns=['video_id', 'title', 'de
 df_details.to_csv('fetched_video_details.csv', index=False,mode='a',header=False)
 
 
-# In[3]:
 
 
 # load the data for analysis 
@@ -103,22 +92,16 @@ df_details = pd.read_csv('fetched_video_details.csv')
 df_details.head()
 
 
-# In[6]:
 
 
 df_details = df_details.drop_duplicates(subset='video_id', keep='first')
 
-
-# ## Top 10 videos
-
-# In[8]:
 
 
 top10 = df_details.sort_values(by='view_count', ascending=False).head(10)
 top10[['video_id', 'title', 'view_count']]
 
 
-# In[14]:
 
 
 titles = top10['title']
@@ -135,34 +118,9 @@ plt.title('Top 10 viewed Videos')
 plt.show()
 
 
-# ##  last 10 viewed videos
-
-# In[10]:
-
-
-last10 = df_details.loc[df_details["view_count"] >0 ].sort_values(by='view_count', ascending=True).head(10)
-last10[['video_id', 'title', 'view_count']]
-
-
-# In[15]:
-
-
-titles = last10['title']
-views = last10['view_count']
-
-
-plt.bar(titles, views,color ='red',
-        width = 0.4)
-plt.xticks(rotation=90)
-plt.xlabel('Video Title')
-plt.ylabel('View Count')
-plt.title('Least 10 viewed Videos ')
-plt.show()
-
-
 # ## MOST LIKED VIDEO
 
-# In[16]:
+
 
 
 most_liked = df_details.sort_values(by='like_count', ascending=False).iloc[0]
@@ -172,16 +130,6 @@ likes = most_liked['like_count']
 print("MOST LIKED VIDEO ",titles," WITH LIKES ",likes)
 
 
-# ## LEAST LIKED VIDEO
-
-# In[17]:
-
-
-least_liked = df_details.sort_values(by='like_count', ascending=True).iloc[0]
-least_liked[['video_id','title', 'like_count']]
-titles = least_liked['title']
-likes = least_liked['like_count']
-print("LEAST LIKED VIDEO ",titles," WITH LIKES ",likes)
 
 
 # ## MOST DURATION VIDEO
@@ -195,118 +143,4 @@ highest_duration[['video_id','title' ,'duration']]
 titles = highest_duration['title']
 duration = highest_duration['duration']
 print("MOST DURATION VIDEO ",titles," WITH  ", pd.to_timedelta(duration))
-
-
-# ## Sentiment Analysis
-
-# In[19]:
-
-
-import re
-nltk.download('vader_lexicon')
-nltk.download('punkt')
-nltk.download('stopwords')
-sid = SentimentIntensityAnalyzer()
-
-
-# In[20]:
-
-
-# Get non empty comments , by filteration for sentiment analysis 
-df_details = df_details[df_details['comments'].apply(lambda x: len(x) > 3)]
-df_details.head(5)
-
-
-# In[35]:
-
-
-def preprocess_comments(comment_arr):
-    cleaned_comments = []
-   
-    comment_arr=eval(comment_arr)
-    
-    stemmer = SnowballStemmer('english')
-    for comment in comment_arr:
-        if isinstance(comment, str):
-            # Convert to lowercase
-            comment = comment.lower()
-
-            # Remove URLs
-            comment = re.sub(r'http\S+', '', comment)
-            
-            # Remove usernames
-            comment = re.sub(r'@\S+', '', comment)
-            
-            # Remove non-alphanumeric characters
-            comment = re.sub('[^a-zA-Z0-9\s]', '', comment)
-            
-            # Tokenize
-            tokens = nltk.word_tokenize(comment)
-            
-            # Remove stop words
-            stop_words = set(stopwords.words('english'))
-            tokens = [token for token in tokens if token not in stop_words]
-            
-            # Stem words
-            tokens = [stemmer.stem(token) for token in tokens]
-            
-            # Join tokens back into a single string
-            comment = ' '.join(tokens)
-            
-            cleaned_comments.append(comment)
-    return cleaned_comments
-
-
-# In[36]:
-
-
-df_details['comments_Processed'] = df_details['comments'].apply(lambda x: preprocess_comments(x))
-df_details['comments_Processed']
-
-
-# In[39]:
-
-
-#calculate sentiment for all comments in a video and take average sentiment score for each video 
-
-def get_sentiment(comment_list):
-    
-    sentiment_scores = []
-    for comment in comment_list:
-        
-        if isinstance(comment, str):
-            score = sid.polarity_scores(comment)
-            sentiment_scores.append(score['compound'])
-    return sum(sentiment_scores)/len(sentiment_scores)
-
-
-# In[40]:
-
-
-df_details['sentiment_score'] = df_details['comments_Processed'].apply(lambda x: get_sentiment(x))
-
-
-
-# In[42]:
-
-
-top10 = df_details.sort_values(by='sentiment_score', ascending=False).head(10)
-top10[['video_id', 'title', 'sentiment_score']]
-
-titles = top10['title']
-sentiment_score = top10['sentiment_score']
-
-# Create a bar diagram
-plt.bar(titles, sentiment_score,)
-plt.xticks(rotation=90)
-plt.xlabel('Video Title')
-plt.ylabel('sentiment_score')
-plt.title('TOP 10 positive viewed Videos ')
-plt.show()
-
-
-# In[ ]:
-
-
-
 
