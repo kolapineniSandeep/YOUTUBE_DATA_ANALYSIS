@@ -1,4 +1,4 @@
-# YOUTUBE_DATA_ANALYSIS
+# YOUTUBE DATA ANALYSIS
 
 The YouTube API is a powerful tool for video analysis and provides much information about videos, channels, and users. Here is the simple python code to get started with the YouTube API for video analysis:
 
